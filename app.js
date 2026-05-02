@@ -1,10 +1,10 @@
 // Document Object Model Element
 const startScreen = document.getElementById("start-screen");
 const quizScreen = document.getElementById("quiz-screen");
-const resultScreen = document.getElementById("result-Screen");
+const resultScreen = document.getElementById("result-screen");
 const startButton = document.getElementById("start-btn");
 const questionText = document.getElementById("question-text");
-const answerContaier = document.getElementById("answer-container");
+const answersContainer = document.getElementById("answer-container");
 const currentQuestionSpan = document.getElementById("current-question");
 const totalQuestionsSpan = document.getElementById("total-questions");
 const scoreSpan = document.getElementById("score");
@@ -18,7 +18,7 @@ const progressBar = document.getElementById("progress");
 const quizQuestions = [
     {
         question: "What is the capital of France?",
-        answer: [
+        answers: [
             {text: "London", correct: false},
             {text: "Berlin", correct: false},
             {text: "Paris", correct: true},
@@ -63,7 +63,8 @@ const quizQuestions = [
     },
 ];
 
-let currecntQuestionIndex = 0;
+
+let currentQuestionIndex = 0;
 let score = 0;
 let answerDisabled = false;
 
@@ -80,8 +81,94 @@ function startQuiz(){
 
     startScreen.classList.remove("active")
     quizScreen.classList.add("active")
+
+    showQuestion()
 }
 
+function showQuestion(){
+    // reset state
+    answerDisabled = false;
+
+    const currentQuestion = quizQuestions[currentQuestionIndex]
+    currentQuestionSpan.textContent = currecntQuestionIndex + 1
+
+    const progressPercent = (currentQuestionIndex / quizQuestions.length) * 100;
+    progressBar.style.width = progressPercent + "%";
+
+    questionText.textContent = currentQuestion.question;
+    
+    answersContainer.innerHTML = "";
+
+    currentQuestion.answers.forEach(answer => {
+        const button = document.createElement("button");
+        button.textContent = answer.text;
+        button.classList.add("answer-btn");
+
+        button.dataset.correct = answer.correct;
+
+        button.addEventListener("click", selectAnswer);
+
+        answersContainer.appendChild(button)
+    })
+    
+}
+
+function selectAnswer(event){
+    if(answerDisabled) return;
+
+    answerDisabled = true;
+
+    const selectedButton = event.target;
+    const isCorrect = selectedButton.dataset.correct === "true";
+
+    Array.from(answersContainer.children).forEach(button => {
+        if(button.dataset.correct === "true"){
+            button.classList.add("correct")
+        } else if(button === selectedButton) {
+            button.classList.add("incorrect");
+        }
+    })
+
+    if(isCorrect){
+        score++;
+        scoreSpan.textContent = score;
+    }
+
+    setTimeout(() => {
+      currentQuestionIndex++;
+      
+      if(currentQuestionIndex < quizQuestions.length){
+        showQuestion()
+      } else {
+        showResults()
+      }
+    },1000)
+}
+
+function showResults(){
+    quizScreen.classList.remove("active");
+    resultScreen.classList.add("active");
+
+    finalScoreSpan.textContent = score;
+
+    const percentage = (score/quizQuestions.length) * 100;
+
+    if(percentage === 100) {
+        resultMessage.textContent = "Perfect! You are a genius"
+    } else if (percentage >= 80) {
+        resultMessage.textContent = "Great job! You kow your stuff."
+    } else if(percentage>= 60){
+        resultMessage.textContent = "Good efffort! Keep learning"
+    } else if(percentage >= 40){
+        resultMessage.textContent = "Not bad! Try again to improve"
+    } else {
+        resultMessage.textContent = "Keep studying! You will get better."
+    }
+}
+
+
 function restartQuiz(){
-    console.log("Quiz restarted")
+    resultScreen.classList.remove("active");
+
+    startQuiz()
 }
